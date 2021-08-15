@@ -11,7 +11,6 @@ import java.util.zip.ZipInputStream;
 
 public class Main {
 
-
     private static final String PATH = "C:\\Users\\EUlyanov\\Documents\\Учеба JAVA\\JavaCore\\Games";
 
     public static void main(String[] args) {
@@ -23,9 +22,9 @@ public class Main {
             System.out.println("указанная папка не существует");
             return;
         }
-        String savegames = PATH + "\\" + "savegames";
-        File catalogSavegames = new File(PATH);
-        if (!catalogSavegames.exists()) {
+        String saveGames = PATH + "\\" + "savegames";
+        File catalogSaveGames = new File(PATH);
+        if (!catalogSaveGames.exists()) {
             System.out.println("папка savegames не существует");
             return;
         }
@@ -33,7 +32,7 @@ public class Main {
         String archiveName = "";
 
         try (DirectoryStream<Path> dir = Files.newDirectoryStream(
-                Paths.get(savegames), "*.zip")) {
+                Paths.get(saveGames), "*.zip")) {
 
             for (Path entry : dir) {
                 archiveName = entry.toAbsolutePath().toString();
@@ -45,40 +44,32 @@ public class Main {
 
         if (!archiveName.isEmpty()) {
             System.out.println("Буферизованное чтение:");
-            List<GameProgress> saves = openZipBuffered(savegames, archiveName);
-            for (GameProgress save: saves) {
+            List<GameProgress> saves = openZipBuffered(saveGames, archiveName);
+            for (GameProgress save : saves) {
                 System.out.println(save.toString());
             }
             System.out.println("Чтение через сохранение файла:");
-            saves = openZip(savegames, archiveName);
-            for (GameProgress save: saves) {
+            saves = openZip(saveGames, archiveName);
+            for (GameProgress save : saves) {
                 System.out.println(save.toString());
             }
         }
-
-
-//        File catadlog = new File(savegames);
-//        String[] fileNames = catadlog.list((dir, name) -> name.matches("*.zip")));
-//        for (String fileName: fileNames) {
-//            System.out.println(fileName);
-//
-//        }
-
     }
 
-    public static List<GameProgress> openZipBuffered(String savegames, String archiveName) {
+    public static List<GameProgress> openZipBuffered(String saveGames, String archiveName) {
         List<GameProgress> saves = new ArrayList<>();
-        try{
+        try {
             try (ZipInputStream zipIn = new ZipInputStream(
                     new FileInputStream(archiveName))) {
                 ZipEntry entryZip;
                 String fileName;
                 while ((entryZip = zipIn.getNextEntry()) != null) {
 
-                    fileName = savegames + "\\" + entryZip.getName();
+                    fileName = saveGames + "\\" + entryZip.getName();
 
                     // предполагаю, что наверное этот объект лучше всего подходит для сбора данных в коллекцию и выдачи в таком же порядке
-                    Collection<Integer> preBuffer = new ArrayDeque<>() {};
+                    Collection<Integer> preBuffer = new ArrayDeque<>() {
+                    };
                     for (int c = zipIn.read(); c != -1; c = zipIn.read()) {
                         preBuffer.add((Integer) c);
                     }
@@ -90,10 +81,10 @@ public class Main {
                     // и там еще проблема, что я не знаю заранее, когда закончится файл...
                     // зато я не записывал промежуточный файл на диск)))
                     int[] buffer1 = preBuffer.stream()
-                            .mapToInt(value ->  (byte) value.intValue())
+                            .mapToInt(value -> (byte) value.intValue())
                             .toArray();
                     byte[] buffer = new byte[buffer1.length];
-                    for (int i = 0; i < buffer1.length ; i++)
+                    for (int i = 0; i < buffer1.length; i++)
                         buffer[i] = (byte) buffer1[i];
 
                     // read the file
@@ -104,28 +95,26 @@ public class Main {
                     } catch (Exception ex) {
                         System.out.println(ex.getMessage());
                     }
-
                 }
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-
         return saves;
     }
 
-    public static List<GameProgress> openZip(String savegames, String archiveName) {
+    public static List<GameProgress> openZip(String saveGames, String archiveName) {
         List<GameProgress> saves = new ArrayList<>();
-        try{
+        try {
             try (ZipInputStream zipIn = new ZipInputStream(
                     new FileInputStream(archiveName))) {
                 ZipEntry entryZip;
                 String fileName;
                 while ((entryZip = zipIn.getNextEntry()) != null) {
 
-                    fileName = savegames + "\\" + entryZip.getName();
+                    fileName = saveGames + "\\" + entryZip.getName();
 
                     FileOutputStream fileOut = new FileOutputStream(fileName);
                     for (int c = zipIn.read(); c != -1; c = zipIn.read()) {
@@ -136,7 +125,7 @@ public class Main {
                     fileOut.close();
 
                     // read the file
-                    try (FileInputStream  fileIn = new FileInputStream(fileName);
+                    try (FileInputStream fileIn = new FileInputStream(fileName);
                          ObjectInputStream ObjIn = new ObjectInputStream(fileIn)) {
                         // десериализуем объект и скастим его в класс game
                         saves.add((GameProgress) ObjIn.readObject());
@@ -155,10 +144,9 @@ public class Main {
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-
         return saves;
     }
 }
